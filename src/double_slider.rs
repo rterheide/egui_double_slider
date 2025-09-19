@@ -200,8 +200,19 @@ impl<'a, T: Numeric> DoubleSlider<'a, T> {
         let visual_slider_width = (self.slider_px_size - 2.0 * offset).max(0.0);
 
         let mut current_val_f64 = val.to_f64();
-        let mut range_min_f64 = self.range.start().to_f64();
-        let mut range_max_f64 = self.range.end().to_f64();
+        let mut range_min_f64;
+        let mut range_max_f64;
+        match self.orientation{
+            SliderOrientation::Horizontal => {
+                range_min_f64 = self.range.start().to_f64();
+                range_max_f64 = self.range.end().to_f64();
+            }
+
+            SliderOrientation::Vertical => {
+                range_min_f64 = self.range.end().to_f64();
+                range_max_f64 = self.range.start().to_f64();
+            }
+        }
 
         if self.logarithmic {
             // Values are asserted to be > 0 in the logarithmic() setter.
@@ -251,13 +262,18 @@ impl<'a, T: Numeric> DoubleSlider<'a, T> {
             // Position of x relative to the start of the slider track
             let val_on_track = (val_along_slider - offset) as f64;
 
-            let ratio = if visual_slider_size == 0.0 {
+            let mut ratio = if visual_slider_size == 0.0 {
                 // If visual width is zero (e.g. self.width is too small),
                 // effectively all points map to the start of the range.
                 0.0
             } else {
                 (val_on_track / visual_slider_size).clamp(0.0, 1.0)
             };
+
+            match self.orientation{
+                SliderOrientation::Horizontal => {}
+                SliderOrientation::Vertical => {ratio = 1.0 - ratio}
+            }
 
             if self.logarithmic {
                 // Values are asserted to be > 0 in the logarithmic() setter.
@@ -337,12 +353,13 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
                 end_edge.x -= self.control_point_radius;
             }  
             SliderOrientation::Vertical => {
-                start_edge = response.rect.center_top();
+                start_edge = response.rect.center_bottom();
                 start_edge.y += self.control_point_radius;
-                end_edge = response.rect.center_bottom();
+                end_edge = response.rect.center_top();
                 end_edge.y -= self.control_point_radius;
             }
         }
+
 
         let visuals = ui.style().interact(&response);
         let widget_visuals = &ui.visuals().widgets;
@@ -383,11 +400,11 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
                     in_between_rect = Rect::from_min_max(
                         to_screen.transform_pos(Pos2 {
                             x: accros_slider_size / 2.0 - stroke_style.width / 2.0,
-                            y: self.val_to_slider_pos(*self.first_slider) + self.control_point_radius,
+                            y: self.val_to_slider_pos(*self.second_slider) - self.control_point_radius,
                         }),
                         to_screen.transform_pos(Pos2 {
                             x: accros_slider_size / 2.0 + stroke_style.width / 2.0,
-                            y: self.val_to_slider_pos(*self.second_slider) - self.control_point_radius,
+                            y: self.val_to_slider_pos(*self.first_slider) + self.control_point_radius,
                         }),
                     );
                 }
@@ -398,11 +415,16 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
 
             let in_between_id = response.id.with(2);
             let in_between_response =
-                ui.interact(in_between_rect, in_between_id, Sense::click_and_drag());
+                ui.interact(in_between_rect, in_between_id, Sense::click_and_drag()
+            );
 
             // drag both sliders by dragging the highlighted part (only when not highlighting is not inverted)
             if in_between_response.dragged() {
                 let drag_delta = if self.orientation == SliderOrientation::Horizontal {in_between_response.drag_delta().x} else {in_between_response.drag_delta().y};
+                dbg!(drag_delta);
+                dbg!(self.second_slider.to_f64());
+                dbg!(self.val_to_slider_pos(*self.second_slider));
+                dbg!(self.slider_pos_to_val(self.val_to_slider_pos(*self.second_slider)).to_f64());
                 *self.second_slider = self.slider_pos_to_val(
                     self.val_to_slider_pos(*self.second_slider) + drag_delta,
                 );
@@ -452,12 +474,13 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
         
         if point_response.dragged() {
             if let Some(pointer_pos) = point_response.interact_pointer_pos() {
+                dbg!(pointer_pos.y - response.rect.top());
                 match self.orientation{
                     SliderOrientation::Horizontal => {
                         *self.first_slider = self.slider_pos_to_val(pointer_pos.x - response.rect.left());
                     }
                     SliderOrientation::Vertical => {
-                        *self.first_slider = self.slider_pos_to_val(pointer_pos.y - response.rect.top());
+                        *self.first_slider = self.slider_pos_to_val(  pointer_pos.y - response.rect.top());
                     }
                 }
                 response.mark_changed();
@@ -506,12 +529,13 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
 
         if point_response.dragged() {
             if let Some(pointer_pos) = point_response.interact_pointer_pos() {
+                dbg!(pointer_pos.y - response.rect.top());
                 match self.orientation{
                     SliderOrientation::Horizontal => { 
                         *self.second_slider = self.slider_pos_to_val(pointer_pos.x - response.rect.left());
                     }
                     SliderOrientation::Vertical => { 
-                        *self.second_slider = self.slider_pos_to_val(pointer_pos.y - response.rect.top());
+                        *self.second_slider = self.slider_pos_to_val(  pointer_pos.y - response.rect.top()  );
                     }
                 }
                 response.mark_changed();
@@ -718,9 +742,7 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
                 response.mark_changed()
             }
         }
-        dbg!(&self.first_slider_f64());
-        dbg!(&self.second_slider_f64());
-
+        dbg!(&self.first_slider_f64(), &self.second_slider_f64());
         response
     }
 }
