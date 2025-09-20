@@ -421,10 +421,6 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
             // drag both sliders by dragging the highlighted part (only when not highlighting is not inverted)
             if in_between_response.dragged() {
                 let drag_delta = if self.orientation == SliderOrientation::Horizontal {in_between_response.drag_delta().x} else {in_between_response.drag_delta().y};
-                dbg!(drag_delta);
-                dbg!(self.second_slider.to_f64());
-                dbg!(self.val_to_slider_pos(*self.second_slider));
-                dbg!(self.slider_pos_to_val(self.val_to_slider_pos(*self.second_slider)).to_f64());
                 *self.second_slider = self.slider_pos_to_val(
                     self.val_to_slider_pos(*self.second_slider) + drag_delta,
                 );
@@ -474,7 +470,6 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
         
         if point_response.dragged() {
             if let Some(pointer_pos) = point_response.interact_pointer_pos() {
-                dbg!(pointer_pos.y - response.rect.top());
                 match self.orientation{
                     SliderOrientation::Horizontal => {
                         *self.first_slider = self.slider_pos_to_val(pointer_pos.x - response.rect.left());
@@ -529,7 +524,6 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
 
         if point_response.dragged() {
             if let Some(pointer_pos) = point_response.interact_pointer_pos() {
-                dbg!(pointer_pos.y - response.rect.top());
                 match self.orientation{
                     SliderOrientation::Horizontal => { 
                         *self.second_slider = self.slider_pos_to_val(pointer_pos.x - response.rect.left());
@@ -742,7 +736,6 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
                 response.mark_changed()
             }
         }
-        dbg!(&self.first_slider_f64(), &self.second_slider_f64());
         response
     }
 }
