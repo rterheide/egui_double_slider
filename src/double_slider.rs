@@ -53,7 +53,7 @@ pub enum SliderOrientation {
 }
 
 impl<'a, T: Numeric> DoubleSlider<'a, T> {
-    pub fn new(lower_value: &'a mut T, upper_value: &'a mut T, range: RangeInclusive<T>, orientation: SliderOrientation) -> Self {
+    pub fn new(lower_value: &'a mut T, upper_value: &'a mut T, range: RangeInclusive<T>) -> Self {
         DoubleSlider {
             first_slider: lower_value,
             second_slider: upper_value,
@@ -71,14 +71,14 @@ impl<'a, T: Numeric> DoubleSlider<'a, T> {
             range,
             logarithmic: false,
             push_by_dragging: true,
-            orientation: orientation,
+            orientation: SliderOrientation::Horizontal,
         }
     }
 
     /// Set the primary width for the slider.
     /// Default is 100.0
     #[inline]
-    pub fn slider_px_size(mut self, size: f32) -> Self {
+    pub fn width(mut self, size: f32) -> Self {
         self.slider_px_size = size;
         self
     }
