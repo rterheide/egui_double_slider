@@ -401,12 +401,12 @@ impl<'a, T: Numeric> Widget for DoubleSlider<'a, T> {
                         to_screen.transform_pos(Pos2 {
                             x: accros_slider_size / 2.0 - stroke_style.width / 2.0,
                             y: self.val_to_slider_pos(*self.second_slider)
-                                - self.control_point_radius,
+                                + self.control_point_radius,
                         }),
                         to_screen.transform_pos(Pos2 {
                             x: accros_slider_size / 2.0 + stroke_style.width / 2.0,
                             y: self.val_to_slider_pos(*self.first_slider)
-                                + self.control_point_radius,
+                                - self.control_point_radius,
                         }),
                     );
                 }
